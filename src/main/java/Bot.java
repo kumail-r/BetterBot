@@ -152,7 +152,14 @@ public class Bot {
     public static class PopulateArrayJob implements Job {
         @Override
         public void execute(JobExecutionContext context) throws JobExecutionException {
-            Bot.generateRedditMemes();
+
+            try {
+                while(Bot.generateRedditMemes()) {
+                    Thread.sleep(10000);
+                }
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         }
     }
 }
