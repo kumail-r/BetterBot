@@ -11,4 +11,9 @@ repositories {
 
 dependencies {
     implementation "com.discord4j:discord4j-core:3.1.5"
+    // https://mvnrepository.com/artifact/org.json/json
+    implementation group: 'org.json', name: 'json', version: '20210307'
+    // https://mvnrepository.com/artifact/org.quartz-scheduler/quartz
+    implementation group: 'org.quartz-scheduler', name: 'quartz', version: '2.2.1'
+    compile "org.slf4j:slf4j-simple:1.7.5"
 }
