@@ -1,5 +1,5 @@
 # BetterBot
-A Discord bot written in Java using Discord4J.
+A general purpose Discord bot written in Java using Discord4J.
 ## Purpose
 Created in order to learn how to make a Discord bot using Discord4J. The intention is to implement common bot functionalities to reduce dependency on other people's code in my servers.
 ## Current Features
@@ -12,5 +12,6 @@ Created in order to learn how to make a Discord bot using Discord4J. The intenti
 * Timer/reminder system
 * Track reactions to apply user roles
 * Coinflip and other randomizers
+* MyAnimeList/AniList integration
 
 There are other planned features that are not present in the above list.
