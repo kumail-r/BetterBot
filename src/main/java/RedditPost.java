@@ -24,7 +24,7 @@ public class RedditPost {
         over18          = data.has("over18")        ? data.getBoolean("over18") : false;
         permalink       = data.has("permalink")     ? data.getString("permalink") : "N/A";
         commentCount    = data.has("num_comments")  ? data.getLong("num_comments") : 0;
-        createdUTC      = data.has("created_utc") ? data.getLong("created_utc") : 0;
+        createdUTC      = data.has("created_utc")   ? data.getLong("created_utc") : 0;
     }
 
     public String getAuthor() {
