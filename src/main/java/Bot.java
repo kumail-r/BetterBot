@@ -1,6 +1,8 @@
+import discord4j.common.util.Snowflake;
 import discord4j.core.DiscordClientBuilder;
 import discord4j.core.GatewayDiscordClient;
 import discord4j.core.event.domain.message.MessageCreateEvent;
+import discord4j.core.object.reaction.ReactionEmoji;
 import discord4j.core.spec.MessageCreateSpec;
 import discord4j.rest.util.Color;
 import org.json.*;
@@ -25,11 +27,36 @@ public class Bot {
 
     private static final Map<String, Command> commands = new HashMap<>();
     private static String prefix = "!";
-    public static ArrayList<RedditPost> redditMemes = new ArrayList<>(); // ArrayList holding posts from the front page of /r/memes
+    private static ArrayList<RedditPost> redditMemes = new ArrayList<>(); // ArrayList holding posts from the front page of /r/memes
 
     interface Command{
         void execute(MessageCreateEvent event);
 
+    }
+    static { // poll
+        commands.put("poll", event -> {
+            if (event.getMessage().getContent().startsWith(prefix + "poll ")){
+                String[] emojis = {null,"1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣", "6️⃣", "7️⃣", "8️⃣", "9️⃣", "🔟"};
+                ArrayList<String> elements = new ArrayList<>(Arrays.asList(event.getMessage().getContent().substring((prefix + "poll ").length()).split(" ")));
+                if (elements.size()>= 3 && elements.size() <= 11){
+                    Snowflake pollPost = event.getMessage().getChannel().block().createEmbed(embedCreateSpec -> {
+                        embedCreateSpec.setColor(Color.CINNABAR);
+                        embedCreateSpec.setTitle("Poll");
+                        embedCreateSpec.setDescription(elements.get(0));
+                        for (int i = 1; i < elements.size(); i++){
+                            embedCreateSpec.addField(emojis[i], elements.get(i), true);
+                        }
+                    }).block().getId();
+
+                    for (int i = 1; i < elements.size(); i++){
+                        event.getMessage().getChannel().block().getMessageById(pollPost).block().addReaction(ReactionEmoji.unicode(emojis[i])).subscribe();
+                    }
+                    return;
+                }
+            }
+            event.getMessage().getChannel().block().createMessage("Usage: `" + prefix + "poll [description] [option 1] [option 2] ... [option 10]`\nEach option and description may not contain anyn spaces." +
+                    "\nFor more details, use `" + prefix + "help poll`.").block();
+        });
     }
     static { // ping
         commands.put("ping", event -> event.getMessage().getChannel().block().createMessage("Pong! " + mentionUserString(event.getMessage().getUserData())).block());
@@ -165,7 +192,8 @@ public class Bot {
         scheduler.start();
         JobDetail job = newJob(PopulateArrayJob.class).withIdentity("populate-array").build();
         SimpleTrigger trigger = newTrigger().withIdentity("trigger1").startNow().withSchedule(simpleSchedule().withIntervalInMinutes(10).repeatForever()).build();
-        scheduler.scheduleJob(job, trigger);
+        // TEMPORARILY commented out so that I don't spam reddit servers while testing other features of the bot
+        //scheduler.scheduleJob(job, trigger);
         GatewayDiscordClient client = DiscordClientBuilder.create(args[0]).build().login().block();
         client.getEventDispatcher().on(MessageCreateEvent.class)
                 .subscribe(event -> {

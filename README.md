@@ -7,11 +7,12 @@ Created in order to learn how to make a Discord bot using Discord4J. The intenti
 * Change prefix
 * Ping
 * Reddit integration to post memes
+* Polling (using reactions)
 ## Planned Features
+* Text based game
 * Music player
 * Timer/reminder system
 * Track reactions to apply user roles
 * Coinflip and other randomizers
 * MyAnimeList/AniList integration
-* Polling (using reactions)
 
