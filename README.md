@@ -12,4 +12,5 @@ Created in order to learn how to make a Discord bot using Discord4J. The intenti
 * Timer/reminder system
 * Track reactions to apply user roles
 * Coinflip and other randomizers
+
 There are other planned features that are not present in the above list.
