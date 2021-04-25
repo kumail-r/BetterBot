@@ -1,10 +1,12 @@
 import discord4j.core.DiscordClientBuilder;
 import discord4j.core.GatewayDiscordClient;
 import discord4j.core.event.domain.message.MessageCreateEvent;
+import discord4j.core.spec.MessageCreateSpec;
 import discord4j.rest.util.Color;
 import org.json.*;
 import org.quartz.*;
 import org.quartz.impl.StdSchedulerFactory;
+import util.mentions;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -12,14 +14,12 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 import static org.quartz.JobBuilder.newJob;
 import static org.quartz.SimpleScheduleBuilder.simpleSchedule;
 import static org.quartz.TriggerBuilder.newTrigger;
+import static util.mentions.mentionUserString;
 
 public class Bot {
 
@@ -32,7 +32,7 @@ public class Bot {
 
     }
     static { // ping
-        commands.put("ping", event -> event.getMessage().getChannel().block().createMessage("Pong!").block());
+        commands.put("ping", event -> event.getMessage().getChannel().block().createMessage("Pong! " + mentionUserString(event.getMessage().getUserData())).block());
     }
     static { // change prefix
         commands.put("changeprefix", event -> {
@@ -48,16 +48,48 @@ public class Bot {
     }
     static { // show help menu
         commands.put("help", event -> {
-            event.getMessage().getChannel().block().createEmbed( embedCreateSpec -> {
-                embedCreateSpec.setColor(Color.RUBY);
-                embedCreateSpec.setTitle("Help Menu");
-                embedCreateSpec.setDescription("The following is a complete list of commands: ");
-                embedCreateSpec.addField("Help","`"+prefix+"help`", true);
-                embedCreateSpec.addField("Change Prefix", "`"+prefix+"changeprefix [new prefix]`", true);
-                embedCreateSpec.addField("Ping", "`"+prefix+"ping`", true);
-                embedCreateSpec.addField("Meme from /r/memes", "`"+prefix+"meme`", true);
-                embedCreateSpec.setUrl("https://github.com/kumail-r/BetterBot");
-            }).block();
+            if (event.getMessage().getContent().equals(prefix + "help meme")){ // help meme
+                event.getMessage().getChannel().block().createEmbed( embedCreateSpec -> {
+                    embedCreateSpec.setColor(Color.RUBY);
+                    embedCreateSpec.setTitle("Meme Help");
+                    embedCreateSpec.setDescription("This command posts a random image from /r/memes from the current top 25. List of posts refreshes every 10 minutes.");
+                    embedCreateSpec.addField("Syntax", "`"+prefix+"meme`", false);
+                }).block();
+            }
+            else if (event.getMessage().getContent().equals(prefix + "help changeprefix")){ // help changeprefix
+                event.getMessage().getChannel().block().createEmbed( embedCreateSpec -> {
+                    embedCreateSpec.setColor(Color.RUBY);
+                    embedCreateSpec.setTitle("Prefix Help");
+                    embedCreateSpec.setDescription("This command changes the prefix used by Better Bot. " +
+                            "Note: any whitespace used in the prefix is ignored." +
+                            "Note 2: Please note that if the prefix is set to be too long certain features of the bot might break.");
+                    embedCreateSpec.addField("Syntax", "`"+prefix+"changeprefix [new prefix]`", false);
+                }).block();
+            }
+            else if (event.getMessage().getContent().equals(prefix + "help ping")){ // help ping
+                event.getMessage().getChannel().block().createEmbed( embedCreateSpec -> {
+                    embedCreateSpec.setColor(Color.RUBY);
+                    embedCreateSpec.setTitle("Ping Help");
+                    embedCreateSpec.setDescription("Responds with pong.");
+                    embedCreateSpec.addField("Syntax", "`"+prefix+"ping`", false);
+                }).block();
+            }
+            else if (event.getMessage().getContent().equals(prefix + "help help")){ // help help
+
+            }
+            else{
+                event.getMessage().getChannel().block().createEmbed( embedCreateSpec -> {
+                    embedCreateSpec.setColor(Color.RUBY);
+                        embedCreateSpec.setTitle("Help Menu");
+                        embedCreateSpec.setDescription("The following is a complete list of commands:\n For more details, type `" + prefix + "help [command]`");
+                        embedCreateSpec.addField("Help","`"+prefix+"help`", true);
+                        embedCreateSpec.addField("Change Prefix", "`"+prefix+"changeprefix [new prefix]`", true);
+                        embedCreateSpec.addField("Ping", "`"+prefix+"ping`", true);
+                        embedCreateSpec.addField("Reddit Meme ", "`"+prefix+"meme`", true);
+                        embedCreateSpec.setUrl("https://github.com/kumail-r/BetterBot");
+                }).block();
+            }
+        event.getMessage().getChannel().block().createMessage(mentionUserString(event.getMessage().getUserData())).block();
         });
     }
     static { // post a meme from the front page of /r/memes
@@ -152,10 +184,9 @@ public class Bot {
     public static class PopulateArrayJob implements Job {
         @Override
         public void execute(JobExecutionContext context) throws JobExecutionException {
-
             try {
                 while(Bot.generateRedditMemes()) {
-                    Thread.sleep(10000);
+                    Thread.sleep(5000);
                 }
             } catch (InterruptedException e) {
                 e.printStackTrace();
