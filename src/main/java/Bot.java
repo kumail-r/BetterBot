@@ -31,7 +31,6 @@ public class Bot {
 
     interface Command{
         void execute(MessageCreateEvent event);
-
     }
     static { // poll
         commands.put("poll", event -> {
@@ -102,17 +101,34 @@ public class Bot {
                 }).block();
             }
             else if (event.getMessage().getContent().equals(prefix + "help help")){ // help help
-
+                event.getMessage().getChannel().block().createEmbed( embedCreateSpec -> {
+                    embedCreateSpec.setColor(Color.RUBY);
+                    embedCreateSpec.setTitle("Help Help");
+                    embedCreateSpec.setDescription("Show list of commands or specify the usage of a specific command.");
+                    embedCreateSpec.addField("Syntax", "`"+prefix+"help [optional specifier]`", false);
+                    embedCreateSpec.addField("Example", "`"+prefix+"help poll`", false);
+                }).block();
+            }
+            else if (event.getMessage().getContent().equals(prefix + "help poll")){ // help poll
+                event.getMessage().getChannel().block().createEmbed( embedCreateSpec -> {
+                    embedCreateSpec.setColor(Color.RUBY);
+                    embedCreateSpec.setTitle("Poll Help");
+                    embedCreateSpec.setDescription("Generates a post with a list of the provided options with reactions.\n" +
+                            "Separate description and options with spaces. \nDescription and options may not contain any spaces." +
+                            "\nMust provide between 2 and 10 options (inclusive).");
+                    embedCreateSpec.addField("Syntax", "`" + prefix + "poll [description] [option 1] [option 2] ... [option 10]`", false);
+                }).block();
             }
             else{
-                event.getMessage().getChannel().block().createEmbed( embedCreateSpec -> {
+                event.getMessage().getChannel().block().createEmbed(embedCreateSpec -> {
                     embedCreateSpec.setColor(Color.RUBY);
                         embedCreateSpec.setTitle("Help Menu");
                         embedCreateSpec.setDescription("The following is a complete list of commands:\n For more details, type `" + prefix + "help [command]`");
-                        embedCreateSpec.addField("Help","`"+prefix+"help`", true);
+                        embedCreateSpec.addField("Help","`"+prefix+"help [optional specifier]`", true);
                         embedCreateSpec.addField("Change Prefix", "`"+prefix+"changeprefix [new prefix]`", true);
                         embedCreateSpec.addField("Ping", "`"+prefix+"ping`", true);
                         embedCreateSpec.addField("Reddit Meme ", "`"+prefix+"meme`", true);
+                        embedCreateSpec.addField("Reaction Poll ", "`" + prefix + "poll [description] [option 1] [option 2] ... [option 10]`", false);
                         embedCreateSpec.setUrl("https://github.com/kumail-r/BetterBot");
                 }).block();
             }
@@ -194,6 +210,7 @@ public class Bot {
         SimpleTrigger trigger = newTrigger().withIdentity("trigger1").startNow().withSchedule(simpleSchedule().withIntervalInMinutes(10).repeatForever()).build();
         // TEMPORARILY commented out so that I don't spam reddit servers while testing other features of the bot
         //scheduler.scheduleJob(job, trigger);
+
         GatewayDiscordClient client = DiscordClientBuilder.create(args[0]).build().login().block();
         client.getEventDispatcher().on(MessageCreateEvent.class)
                 .subscribe(event -> {
