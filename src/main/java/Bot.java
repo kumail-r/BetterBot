@@ -3,12 +3,11 @@ import discord4j.core.DiscordClientBuilder;
 import discord4j.core.GatewayDiscordClient;
 import discord4j.core.event.domain.message.MessageCreateEvent;
 import discord4j.core.object.reaction.ReactionEmoji;
-import discord4j.core.spec.MessageCreateSpec;
 import discord4j.rest.util.Color;
 import org.json.*;
 import org.quartz.*;
 import org.quartz.impl.StdSchedulerFactory;
-import util.mentions;
+
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -24,14 +23,18 @@ import static org.quartz.TriggerBuilder.newTrigger;
 import static util.mentions.mentionUserString;
 
 public class Bot {
+/* --------------------------------------------------------------------------------------------------------------------- Global Variables */
 
-    private static final Map<String, Command> commands = new HashMap<>();
-    private static String prefix = "!";
+    private static final Map<String, Command> commands = new HashMap<>(); // contains all the commands
+    private static String prefix = "!"; // contains the prefix for the commands
     private static ArrayList<RedditPost> redditMemes = new ArrayList<>(); // ArrayList holding posts from the front page of /r/memes
 
-    interface Command{
+/* --------------------------------------------------------------------------------------------------------------------- Command Interface */
+    interface Command{ // for lambda expressions
         void execute(MessageCreateEvent event);
     }
+/* --------------------------------------------------------------------------------------------------------------------- Static Clauses */
+
     static { // poll
         commands.put("poll", event -> {
             if (event.getMessage().getContent().startsWith(prefix + "poll ")){
@@ -53,12 +56,14 @@ public class Bot {
                     return;
                 }
             }
-            event.getMessage().getChannel().block().createMessage("Usage: `" + prefix + "poll [description] [option 1] [option 2] ... [option 10]`\nEach option and description may not contain anyn spaces." +
+            event.getMessage().getChannel().block().createMessage("Usage: `" + prefix + "poll [description] [optio" +
+                    "n 1] [option 2] ... [option 10]`\nEach option and description may not contain anyn spaces." +
                     "\nFor more details, use `" + prefix + "help poll`.").block();
         });
     }
     static { // ping
-        commands.put("ping", event -> event.getMessage().getChannel().block().createMessage("Pong! " + mentionUserString(event.getMessage().getUserData())).block());
+        commands.put("ping", event -> event.getMessage().getChannel().block().createMessage("Pong! " +
+                mentionUserString(event.getMessage().getUserData())).block());
     }
     static { // change prefix
         commands.put("changeprefix", event -> {
@@ -161,7 +166,8 @@ public class Bot {
                 embedCreateSpec.setTitle(finalPost.getTitle());
                 embedCreateSpec.setAuthor(finalPost.getAuthor(), "https://reddit.com/u/" + finalPost.getAuthor(), null);
                 embedCreateSpec.setImage(finalPost.getUrl());
-                embedCreateSpec.setFooter(finalPost.getUpvotes() + " \uD83D\uDC4D\t" + finalPost.getCommentCount() + " \uD83D\uDCAC\t" + (new Date(finalPost.getCreatedUTC() * 1000)).toString() + "\uD83D\uDD53" , null);
+                embedCreateSpec.setFooter(finalPost.getUpvotes() + " \uD83D\uDC4D\t" + finalPost.getCommentCount()
+                        + " \uD83D\uDCAC\t" + (new Date(finalPost.getCreatedUTC() * 1000)).toString() + "\uD83D\uDD53" , null);
             }).block();
         });
     }
@@ -192,7 +198,8 @@ public class Bot {
                 if (lowDoneFlag){
                     if (highDoneFlag){
                         result = (long)(Math.random() * (high - low + 1)) + low;
-                        event.getMessage().getChannel().block().createMessage("Here is random integer between " + low + " and " + high + ": `" + result + "`.").block();
+                        event.getMessage().getChannel().block().createMessage("Here is random integer between " + low +
+                                " and " + high + ": `" + result + "`.").block();
                     }
                     else{
                         result = (long)(Math.random() * (low + 1));
@@ -206,6 +213,7 @@ public class Bot {
         });
     }
 
+/* --------------------------------------------------------------------------------------------------------------------- Helper Methods */
 
     public static boolean generateRedditMemes(){ // populate redditMemes ArrayList with memes from the trending page of /r/memes and returns true if failed to populate array
         HttpURLConnection connection;
@@ -214,6 +222,7 @@ public class Bot {
         StringBuffer responseContent = new StringBuffer();
         boolean failFlag = false;
         try {
+            // Connect to Reddit (I am new to this so I do not know a better way to do this)
             URL url = new URL("https://www.reddit.com/r/memes.json");
             connection = (HttpURLConnection) url.openConnection();
             connection.setRequestProperty("http.agent","Better Bot:kumail-r:v0.3 (by /u/raimimemer69)");
@@ -223,7 +232,7 @@ public class Bot {
             connection.setReadTimeout(10000);
 
             int status = connection.getResponseCode();
-            if (status > 299) {
+            if (status > 299) { // failure to get json
                 reader = new BufferedReader(new InputStreamReader(connection.getErrorStream()));
                 failFlag = true;
             }
@@ -243,10 +252,11 @@ public class Bot {
                     JSONObject post = posts.getJSONObject(i);
                     JSONObject data = post.getJSONObject("data");
                     redditMemes.add(new RedditPost(data));
-                    System.out.println("object added..."); // for testing
+                    //System.out.println("object added..."); // for testing
                 }
-                System.out.println("Exited loop..."); // for testing
-            }else{
+                System.out.println("SUCCESS"); // for testing
+            }
+            else{
                 System.out.println("FAILURE: " +responseContent.toString()); // for testing
             }
             return failFlag;
@@ -258,6 +268,7 @@ public class Bot {
         return true;
     }
 
+/* --------------------------------------------------------------------------------------------------------------------- Main Method */
     public static void main(String[] args) throws SchedulerException {
         Scheduler scheduler = new StdSchedulerFactory().getDefaultScheduler();
         scheduler.start();
@@ -281,6 +292,7 @@ public class Bot {
         scheduler.shutdown();
     }
 
+/* --------------------------------------------------------------------------------------------------------------------- Scheduler Job Classes */
     public static class PopulateArrayJob implements Job {
         @Override
         public void execute(JobExecutionContext context) throws JobExecutionException {
