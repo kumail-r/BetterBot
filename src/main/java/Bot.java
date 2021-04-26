@@ -119,17 +119,27 @@ public class Bot {
                     embedCreateSpec.addField("Syntax", "`" + prefix + "poll [description] [option 1] [option 2] ... [option 10]`", false);
                 }).block();
             }
+            else if (event.getMessage().getContent().equals(prefix + "help random")) { // help random
+                event.getMessage().getChannel().block().createEmbed( embedCreateSpec -> {
+                    embedCreateSpec.setColor(Color.RUBY);
+                    embedCreateSpec.setTitle("Random Help");
+                    embedCreateSpec.setDescription("Generates a random long integer from the range between the two provided numbers. If there is only one valid input, the" +
+                            " number generated is between 0 and the single input.");
+                    embedCreateSpec.addField("Syntax", "`"+prefix+"random [num1] [num2]`", false);
+                }).block();
+            }
             else{
                 event.getMessage().getChannel().block().createEmbed(embedCreateSpec -> {
                     embedCreateSpec.setColor(Color.RUBY);
-                        embedCreateSpec.setTitle("Help Menu");
-                        embedCreateSpec.setDescription("The following is a complete list of commands:\n For more details, type `" + prefix + "help [command]`");
-                        embedCreateSpec.addField("Help","`"+prefix+"help [optional specifier]`", true);
-                        embedCreateSpec.addField("Change Prefix", "`"+prefix+"changeprefix [new prefix]`", true);
-                        embedCreateSpec.addField("Ping", "`"+prefix+"ping`", true);
-                        embedCreateSpec.addField("Reddit Meme ", "`"+prefix+"meme`", true);
-                        embedCreateSpec.addField("Reaction Poll ", "`" + prefix + "poll [description] [option 1] [option 2] ... [option 10]`", false);
-                        embedCreateSpec.setUrl("https://github.com/kumail-r/BetterBot");
+                    embedCreateSpec.setTitle("Help Menu");
+                    embedCreateSpec.setDescription("The following is a complete list of commands:\n For more details, type `" + prefix + "help [command]`");
+                    embedCreateSpec.addField("Help","`"+prefix+"help [optional specifier]`", true);
+                    embedCreateSpec.addField("Change Prefix", "`"+prefix+"changeprefix [new prefix]`", true);
+                    embedCreateSpec.addField("Ping", "`"+prefix+"ping`", true);
+                    embedCreateSpec.addField("Reddit Meme ", "`"+prefix+"meme`", true);
+                    embedCreateSpec.addField("Random", "`" + prefix + "random [num1] [num2]`", true);
+                    embedCreateSpec.addField("Reaction Poll ", "`" + prefix + "poll [description] [option 1] [option 2] ... [option 10]`", true);
+                    embedCreateSpec.setUrl("https://github.com/kumail-r/BetterBot");
                 }).block();
             }
         event.getMessage().getChannel().block().createMessage(mentionUserString(event.getMessage().getUserData())).block();
@@ -142,15 +152,60 @@ public class Bot {
                     return;
             }
             RedditPost post = redditMemes.get((int)(Math.random() * redditMemes.size()));
+            while(!post.validEmbed()){
+                post = redditMemes.get((int)(Math.random() * redditMemes.size()));
+            }
+            RedditPost finalPost = post;
             event.getMessage().getChannel().block().createEmbed(embedCreateSpec -> {
                 embedCreateSpec.setColor(Color.LIGHT_SEA_GREEN);
-                embedCreateSpec.setTitle(post.getTitle());
-                embedCreateSpec.setAuthor(post.getAuthor(), "https://reddit.com/u/" + post.getAuthor(), null);
-                embedCreateSpec.setImage(post.getUrl());
-                embedCreateSpec.setFooter(post.getUpvotes() + " \uD83D\uDC4D\t" + post.getCommentCount() + " \uD83D\uDCAC\t" + (new Date(post.getCreatedUTC() * 1000)).toString() + "\uD83D\uDD53" , null);
+                embedCreateSpec.setTitle(finalPost.getTitle());
+                embedCreateSpec.setAuthor(finalPost.getAuthor(), "https://reddit.com/u/" + finalPost.getAuthor(), null);
+                embedCreateSpec.setImage(finalPost.getUrl());
+                embedCreateSpec.setFooter(finalPost.getUpvotes() + " \uD83D\uDC4D\t" + finalPost.getCommentCount() + " \uD83D\uDCAC\t" + (new Date(finalPost.getCreatedUTC() * 1000)).toString() + "\uD83D\uDD53" , null);
             }).block();
         });
     }
+    static { // random
+        commands.put("random", event -> {
+            String[] contents = event.getMessage().getContent().replaceFirst(prefix+"random", "").split(" ");
+            if (contents.length > 1){
+                long low = 0;
+                long high = 0;
+                long result = 0;
+                boolean lowDoneFlag = false;
+                boolean highDoneFlag = false;
+                for (String s : contents){
+                    if (!s.equals("")){
+                        try{
+                            if (!lowDoneFlag) {
+                                low = Long.parseLong(s);
+                                lowDoneFlag = true;
+                            }
+                            else if (!highDoneFlag){
+                                high = Long.parseLong(s);
+                                highDoneFlag = true;
+                            }
+                        }
+                        catch(NumberFormatException exception){}
+                    }
+                }
+                if (lowDoneFlag){
+                    if (highDoneFlag){
+                        result = (long)(Math.random() * (high - low + 1)) + low;
+                        event.getMessage().getChannel().block().createMessage("Here is random integer between " + low + " and " + high + ": `" + result + "`.").block();
+                    }
+                    else{
+                        result = (long)(Math.random() * (low + 1));
+                        event.getMessage().getChannel().block().createMessage("You did not provide two valid numbers.\n" +
+                                "Here is random integer between " + 0 + " and " + low + ": `" + result + "`.").block();
+                    }
+                    return;
+                }
+            }
+            event.getMessage().getChannel().block().createMessage("Usage: `" + prefix + "random [x] [y]`.").block();
+        });
+    }
+
 
     public static boolean generateRedditMemes(){ // populate redditMemes ArrayList with memes from the trending page of /r/memes and returns true if failed to populate array
         HttpURLConnection connection;

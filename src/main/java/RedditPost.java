@@ -74,4 +74,16 @@ public class RedditPost {
     public String getCommentsLink(){
         return "https://reddit.com" + permalink;
     }
+
+    public boolean validEmbed(){
+        boolean result = false;
+        String[] types = {".jpg", ".png", ".jpeg", ".gif"};
+        for (String s : types){
+            if (url.endsWith(s)){
+                result = true;
+                break;
+            }
+        }
+        return result;
+    }
 }
