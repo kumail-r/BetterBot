@@ -286,7 +286,7 @@ public class Bot {
         JobDetail job = newJob(PopulateArrayJob.class).withIdentity("populate-array").build();
         SimpleTrigger trigger = newTrigger().withIdentity("trigger1").startNow().withSchedule(simpleSchedule().withIntervalInMinutes(10).repeatForever()).build();
         // TEMPORARILY commented out so that I don't spam reddit servers while testing other features of the bot
-        //scheduler.scheduleJob(job, trigger);
+        scheduler.scheduleJob(job, trigger);
 
 // -----------------------------------------------------------------------------------------------------AudioPlayer code
         // Creates AudioPlayer instances and translates URLs to AudioTrack instances
