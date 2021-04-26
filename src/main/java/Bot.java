@@ -13,6 +13,7 @@ import discord4j.core.object.entity.channel.VoiceChannel;
 import discord4j.core.object.reaction.ReactionEmoji;
 import discord4j.rest.util.Color;
 import discord4j.voice.AudioProvider;
+import discord4j.voice.VoiceConnection;
 import org.json.*;
 import org.quartz.*;
 import org.quartz.impl.StdSchedulerFactory;
@@ -36,7 +37,7 @@ import static util.mentions.mentionUserString;
 public class Bot {
 /* --------------------------------------------------------------------------------------------------------------------- Global Variables */
     private static final Map<String, Command> commands = new HashMap<>(); // contains all the commands
-    private static String prefix = "!"; // contains the prefix for the commands
+    private static String prefix = "?"; // contains the prefix for the commands
     private static ArrayList<RedditPost> redditMemes = new ArrayList<>(); // ArrayList holding posts from the front page of /r/memes
 /* --------------------------------------------------------------------------------------------------------------------- Command Interface */
     interface Command{ // for lambda expressions
@@ -314,12 +315,20 @@ public class Bot {
                     if (channel != null) {
                         // join returns a VoiceConnection which would be required if we were
                         // adding disconnection features, but for now we are just ignoring it.
-                        channel.join(spec -> spec.setProvider(provider)).block();
+                        VoiceConnection channelConnection = channel.join(spec -> spec.setProvider(provider)).block();
                         final TrackScheduler tScheduler = new TrackScheduler(player);
                         commands.put("play", event2 -> {
-                            final String content = event2.getMessage().getContent();;
+                            final String content = event2.getMessage().getContent();
                             final List<String> command = Arrays.asList(content.split(" "));
-                            playerManager.loadItem(command.get(1), tScheduler);
+                            if (command.size() != 0) {
+                                playerManager.loadItem(command.get(1), tScheduler);
+                            }
+                        });
+                        commands.put("disconnect", event2 -> {
+                            channelConnection.disconnect().block();
+                        });
+                        commands.put("skip", event2 -> {
+
                         });
                     }
                 }
